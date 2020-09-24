@@ -1,0 +1,111 @@
+version: 2.1
+
+defaults: &defaults
+  working_directory: ~/ts-readme
+  docker:
+    - image: circleci/node:10-browsers
+  environment:
+    TZ: '/usr/share/zoneinfo/America/Los_Angeles'
+
+aliases:
+  # Circle related commands
+  - &restore-cache
+    keys:
+      # Find a cache corresponding to this specific package.json checksum
+      # when this file is changed, this key will fail
+      - ts-readme-{{ checksum "yarn.lock" }}-{{ checksum ".circleci/config.yml" }}
+      - ts-readme-{{ checksum "yarn.lock" }}
+      # Find the most recent cache used from any branch
+      - ts-readme-
+  - &save-cache
+    key: ts-readme-{{ checksum "yarn.lock" }}-{{ checksum ".circleci/config.yml" }}
+    paths:
+      - ~/.cache/yarn
+      - node_modules
+  # Yarn commands
+  - &yarn
+    name: Install Dependencies
+    command: yarn install --frozen-lockfile --non-interactive --cache-folder=~/.cache/yarn
+  - &lint
+    name: Lint
+    command: yarn lint
+  - &test
+    name: Test
+    command: yarn test:coverage
+  - &build
+    name: Build
+    command: yarn build
+
+jobs:
+  install:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache: *restore-cache
+      - run: *yarn
+      - save_cache: *save-cache
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  build:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/ts-readme
+      - run: *build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  lint:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/ts-readme
+      - run: *lint
+
+  test:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/ts-readme
+      - run: *test
+      - run:
+          name: Send CodeCov Results
+          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_KEY
+
+  release:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/ts-readme
+      - run:
+          name: Release
+          command: yarn auto shipit -vv
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - install
+
+      - build:
+          requires:
+            - install
+
+      - lint:
+          requires:
+            - build
+
+      - test:
+          requires:
+            - build
+
+      - release:
+          context: '@ts-readme-canary'
+          requires:
+            - test
+            - lint

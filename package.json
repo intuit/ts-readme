@@ -1,0 +1,60 @@
+{
+  "name": "ts-readme",
+  "version": "1.1.1",
+  "description": "Generate docs from typescript + jsdoc and put it in a README",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist",
+  "author": "Andrew Lisowski lisowski54@gmail.com",
+  "sideEffects": false,
+  "contributors": [
+    "Andrew Lisowski lisowski54@gmail.com"
+  ],
+  "license": "MIT",
+  "bin": "bin/ts-readme.js",
+  "scripts": {
+    "build": "ds build",
+    "start": "ds build --watch",
+    "test": "ds test",
+    "lint": "ds lint",
+    "docs": "./bin/ts-readme.js --header-depth 4 --matcher TS-README-GENERATED"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "!*.test.*",
+    "!__snapshots__",
+    "!__tests__"
+  ],
+  "dependencies": {
+    "command-line-application": "^0.9.6",
+    "fast-glob": "^3.1.1",
+    "prettier": "1.19.1",
+    "typescript": "3.7.2"
+  },
+  "devDependencies": {
+    "@auto-it/all-contributors": "9.49.4",
+    "@auto-it/first-time-contributor": "9.49.4",
+    "@design-systems/cli": "1.1.0",
+    "@types/prettier": "^1.19.0",
+    "auto": "9.49.4",
+    "husky": "3.0.1",
+    "lint-staged": "9.2.1"
+  },
+  "prettier": {
+    "singleQuote": true
+  },
+  "lint-staged": {
+    "*.{js,json,css,md,ts,tsx,jsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "auto": {
+    "plugins": [
+      "npm",
+      "all-contributors",
+      "first-time-contributor"
+    ]
+  }
+}

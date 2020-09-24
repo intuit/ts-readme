@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`it should generate some simple types 1`] = `
+Array [
+  "### \`bar\` (variable)
+
+",
+  "### \`foo\` (variable: number)
+
+",
+  "### \`Interface\` (interface)
+
+**Members:**
+
+- one (\`boolean\`)
+- two (\`number\`)
+
+",
+  "### \`Type\` (type)
+
+",
+  "### \`add\` (function)
+
+Add two numbers
+
+**Parameters:**
+
+- left (\`number\`) - the first number
+- right (\`number\`) - the second number
+
+**returns:** string
+
+\`\`\`tsx
+add(1, 2)
+\`\`\`
+
+
+",
+  "### \`subtract\` (function)
+
+Subtract two numbers
+
+**Parameters:**
+
+- left (\`number\`) 
+- right (\`any\`) 
+
+**returns:** string
+
+",
+  "### \`withCallback\` (function)
+
+**Parameters:**
+
+- foo (\`(value: string) => string\`) - the callback
+
+**returns:** string
+
+",
+  "### \`Car\` (class)
+
+A car
+
+**Properties:**
+
+- wheels - A circle thing
+
+",
+]
+`;
