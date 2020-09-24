@@ -105,7 +105,6 @@ workflows:
             - build
 
       - release:
-          context: '@ts-readme-canary'
           requires:
             - test
             - lint
