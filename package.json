@@ -29,8 +29,10 @@
   "dependencies": {
     "command-line-application": "^0.9.6",
     "fast-glob": "^3.1.1",
-    "prettier": "1.19.1",
-    "typescript": "3.7.2"
+    "prettier": "1.19.1"
+  },
+  "peerDependencies": {
+    "typescript": ">= 3.x"
   },
   "devDependencies": {
     "@auto-it/all-contributors": "9.49.4",
@@ -39,7 +41,8 @@
     "@types/prettier": "^1.19.0",
     "auto": "9.49.4",
     "husky": "3.0.1",
-    "lint-staged": "9.2.1"
+    "lint-staged": "9.2.1",
+    "typescript": "3.7.2"
   },
   "prettier": {
     "singleQuote": true

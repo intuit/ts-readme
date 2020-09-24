@@ -182,6 +182,7 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
       file.statements
         .filter((s): s is
           | ts.VariableStatement
+          | ts.FunctionDeclaration
           | ts.TypeAliasDeclaration
           | ts.ClassDeclaration
           | ts.InterfaceDeclaration =>

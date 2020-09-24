@@ -15,8 +15,9 @@
 
 - Creates documentation for any exported entity
 - Combines JSDoc + TypeScript annotations
+- Includes parameters, return types, descriptions, and even example blocks
 
-## Installationcp 
+## Installation
 
 ```sh
 npm i ts-readme
