@@ -1,4 +1,4 @@
 #!/usr/bin/env node
 
 // eslint-disable-next-line
-require('../dist/cjs/bin');
+require('../dist/cjs/bin.cjs');

@@ -35,9 +35,19 @@ interface TypeScriptDocument {
 
 /** Return the jsDoc comment if there is one */
 function getJsDocComment(statement: ts.Node) {
-  return (statement as any).jsDoc && (statement as any).jsDoc[0]
-    ? (statement as any).jsDoc[0].comment
-    : '';
+  if (
+    !(
+      'jsDoc' in statement &&
+      Array.isArray(statement.jsDoc) &&
+      ts.isJSDoc(statement.jsDoc[0])
+    )
+  ) {
+    return '';
+  }
+
+  return Array.isArray(statement.jsDoc[0].comment)
+    ? statement.jsDoc[0].comment.join(' ')
+    : (statement.jsDoc[0].comment as string | undefined ?? '');
 }
 
 /** Determine if a constant is a function decl */
@@ -45,7 +55,7 @@ function isArrowConst(statement: ts.Node): statement is ts.VariableStatement {
   return Boolean(
     ts.isVariableStatement(statement) &&
       statement.declarationList.declarations[0].initializer &&
-      ts.isArrowFunction(statement.declarationList.declarations[0].initializer)
+      ts.isArrowFunction(statement.declarationList.declarations[0].initializer),
   );
 }
 
@@ -72,7 +82,7 @@ function getType(statement: ts.Node) {
       return `variable: ${printer.printNode(
         ts.EmitHint.Unspecified,
         statement.declarationList.declarations[0].type,
-        statement.getSourceFile()
+        statement.getSourceFile(),
       )}`;
     }
 
@@ -85,7 +95,7 @@ function print(param: ts.Node): string {
   return printer.printNode(
     ts.EmitHint.Unspecified,
     param,
-    param.getSourceFile()
+    param.getSourceFile(),
   );
 }
 
@@ -106,7 +116,7 @@ export function generateMarkdown(doc: TypeScriptDocument, headerDepth = 3) {
   if (doc.params && doc.params.length > 0) {
     result += '**Parameters:**\n\n';
 
-    doc.params.forEach(param => {
+    doc.params.forEach((param) => {
       result += `- ${param.name} ${param.type ? `(\`${param.type}\`) ` : ''}${
         param.description ? `- ${param.description}` : ''
       }\n`;
@@ -118,7 +128,7 @@ export function generateMarkdown(doc: TypeScriptDocument, headerDepth = 3) {
   if (doc.properties && doc.properties.length > 0) {
     result += '**Properties:**\n\n';
 
-    doc.properties.forEach(property => {
+    doc.properties.forEach((property) => {
       result += `- ${property}\n`;
     });
 
@@ -128,7 +138,7 @@ export function generateMarkdown(doc: TypeScriptDocument, headerDepth = 3) {
   if (doc.members && doc.members.length > 0) {
     result += '**Members:**\n\n';
 
-    doc.members.forEach(member => {
+    doc.members.forEach((member) => {
       result += `- ${member}\n`;
     });
 
@@ -140,7 +150,7 @@ export function generateMarkdown(doc: TypeScriptDocument, headerDepth = 3) {
   }
 
   if (doc.examples && doc.examples.length > 0) {
-    doc.examples.forEach(example => {
+    doc.examples.forEach((example) => {
       result += `${
         example.includes('```') ? example : `\`\`\`tsx\n${example}\n\`\`\`\n`
       }\n`;
@@ -168,7 +178,7 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
       return '';
     }
 
-    const paramType = fn.parameters.find(param => print(param.name) === name);
+    const paramType = fn.parameters.find((param) => print(param.name) === name);
 
     return paramType
       ? checker.typeToString(checker.getTypeAtLocation(paramType))
@@ -177,27 +187,33 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
 
   const docs = program
     .getSourceFiles()
-    .filter(file => !file.isDeclarationFile)
-    .map(file =>
+    .filter((file) => !file.isDeclarationFile)
+    .map((file) =>
       file.statements
-        .filter((s): s is
-          | ts.VariableStatement
-          | ts.FunctionDeclaration
-          | ts.TypeAliasDeclaration
-          | ts.ClassDeclaration
-          | ts.InterfaceDeclaration =>
-          Boolean(
-            s.modifiers &&
-              // This determines if it is exported
-              s.modifiers.find(e => e.kind === ts.SyntaxKind.ExportKeyword) &&
-              (ts.isVariableStatement(s) ||
-                ts.isFunctionLike(s) ||
-                ts.isTypeAliasDeclaration(s) ||
-                ts.isClassDeclaration(s) ||
-                ts.isInterfaceDeclaration(s))
-          )
+        .filter(
+          (
+            s,
+          ): s is
+            | ts.VariableStatement
+            | ts.FunctionDeclaration
+            | ts.TypeAliasDeclaration
+            | ts.ClassDeclaration
+            | ts.InterfaceDeclaration =>
+            Boolean(
+              'modifiers' in s &&
+                Array.isArray(s.modifiers) &&
+                // This determines if it is exported
+                (s.modifiers as ts.ModifierLike[]).find(
+                  (e) => e.kind === ts.SyntaxKind.ExportKeyword,
+                ) &&
+                (ts.isVariableStatement(s) ||
+                  ts.isFunctionLike(s) ||
+                  ts.isTypeAliasDeclaration(s) ||
+                  ts.isClassDeclaration(s) ||
+                  ts.isInterfaceDeclaration(s)),
+            ),
         )
-        .map(statement => {
+        .map((statement) => {
           const title = ts.isVariableStatement(statement)
             ? print(statement.declarationList.declarations[0].name)
             : (statement.name && print(statement.name)) || '';
@@ -211,21 +227,24 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
             .filter(ts.isJSDocParameterTag)
             .map((doc: ts.JSDocParameterTag) => ({
               name: print(doc.name),
-              description: doc.comment ? doc.comment.replace(/^- /, '') : '',
-              type: getParamType(doc, statement)
+              description:
+                typeof doc.comment === 'string'
+                  ? doc.comment.replace(/^- /, '')
+                  : '',
+              type: getParamType(doc, statement),
             }));
 
           if (ts.isFunctionLike(statement)) {
-            statement.parameters.forEach(param => {
+            statement.parameters.forEach((param) => {
               const paramName = print(param.name);
 
-              if (params.find(p => p.name === paramName)) {
+              if (params.find((p) => p.name === paramName)) {
                 return;
               }
 
               params.push({
                 name: paramName,
-                type: checker.typeToString(checker.getTypeAtLocation(param))
+                type: checker.typeToString(checker.getTypeAtLocation(param)),
               });
             });
 
@@ -233,35 +252,35 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
 
             [returnType] = type
               .getCallSignatures()
-              .map(sig =>
-                checker.typeToString(checker.getReturnTypeOfSignature(sig))
+              .map((sig) =>
+                checker.typeToString(checker.getReturnTypeOfSignature(sig)),
               );
           }
 
           let members: string[] = [];
 
           if (ts.isInterfaceDeclaration(statement)) {
-            members = statement.members.map(member => {
+            members = statement.members.map((member) => {
               const memberDescription = getJsDocComment(member);
 
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               return `${print(member.name!).replace(
                 /\/\*\*.*\*\/\s+(\S+)/,
-                '$1'
+                '$1',
               )} (\`${checker.typeToString(
-                checker.getTypeAtLocation(member)
+                checker.getTypeAtLocation(member),
               )}\`)${memberDescription ? ` - ${memberDescription}` : ''}`;
             });
           }
 
           const examples = jsDocs
-            .filter(doc => doc.tagName.escapedText === 'example')
-            .map(doc => doc.comment)
+            .filter((doc) => doc.tagName.escapedText === 'example')
+            .map((doc) => doc.comment)
             .filter((doc): doc is string => Boolean(doc));
 
           const properties = jsDocs
-            .filter(doc => doc.tagName.escapedText === 'property')
-            .map(doc => doc.comment)
+            .filter((doc) => doc.tagName.escapedText === 'property')
+            .map((doc) => doc.comment)
             .filter((doc): doc is string => Boolean(doc));
 
           return {
@@ -272,9 +291,9 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
             properties,
             returnType,
             members,
-            type: getType(statement)
+            type: getType(statement),
           };
-        })
+        }),
     );
 
   return docs.reduce((acc, item) => [...acc, ...item], []);
@@ -286,7 +305,7 @@ function getDocs(filenames: string[]): TypeScriptDocument[] {
  * @param pattern - A glob pattern or patterns to match files from
  */
 export async function getAllDocs(
-  pattern: string | string[] = ['./src/**/*.(ts|tsx)', '!**/__tests__']
+  pattern: string | string[] = ['./src/**/*.(ts|tsx)', '!**/__tests__'],
 ) {
   const files = await glob(pattern);
   return getDocs(files);
@@ -300,7 +319,7 @@ export async function getAllDocs(
  */
 export function createMatcher(name: string) {
   return new RegExp(
-    `(<!-- ${name} START -->\\s*)([\\S\\s]*)(\\s*<!-- ${name} END -->)`
+    `(<!-- ${name} START -->\\s*)([\\S\\s]*)(\\s*<!-- ${name} END -->)`,
   );
 }
 
@@ -327,19 +346,19 @@ export default async function generate(options: GenerateOptions = {}) {
   const {
     matcher = createMatcher('INSERT GENERATED DOCS'),
     pattern,
-    headerDepth = 3
+    headerDepth = 3,
   } = options;
   const docs = await getAllDocs(pattern);
-  const markdown = docs.map(doc => generateMarkdown(doc, headerDepth));
+  const markdown = docs.map((doc) => generateMarkdown(doc, headerDepth));
 
-  let readme = fs.readFileSync('./README.md', 'utf8');
+  let readme = await fs.promises.readFile('./README.md', 'utf8');
 
   if (readme.match(matcher)) {
     readme = readme.replace(matcher, `$1${markdown.join('\n')}$3`);
 
-    fs.writeFileSync(
+    await fs.promises.writeFile(
       './README.md',
-      prettier.format(readme, { parser: 'markdown', singleQuote: true })
+      await prettier.format(readme, { parser: 'markdown', singleQuote: true }),
     );
   }
 }

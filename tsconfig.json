@@ -1,22 +1,23 @@
 {
-  "include": ["src/**/*", "typings/**/*"],
+  "include": ["src/**/*", "typings/**/*", "*.ts", "jest.config.js"],
 
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./dist/esm",
     "rootDir": "./src",
     "composite": true,
     "jsx": "preserve",
     "declaration": true,
     "declarationMap": true,
-    "target": "es5",
-    "module": "commonjs",
+    "target": "ES2020",
+    "module": "NodeNext",
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "lib": ["esnext", "dom"],
+    "lib": ["ES2020", "DOM"],
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "resolveJsonModule": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "skipLibCheck": true
   }
 }

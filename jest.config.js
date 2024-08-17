@@ -1,9 +1,22 @@
-const base = require('@design-systems/test/jest.config.base');
-const { name } = require('./package.json');
+/**
+ * @type {import('@jest/types').Config}
+ */
+const jestConfig = {
+  testMatch: ["**/*.test.ts"],
+  testEnvironment: "node",
+  extensionsToTreatAsEsm: [".ts", ".tsx", ".jsx"],
+  transformIgnorePatterns: [], // transform node_modules
+  transform: {
+    "^.+\\.(t|j)sx?$": "@swc/jest",
+  },
+  // resolve js files from ts files
+  moduleNameMapper: {
+    "(.+)\\.js": "$1",
+  },
+  // coverage
+  collectCoverageFrom: ["src/**/*.{ts,tsx,js,jsx}"],
+  coveragePathIgnorePatterns: ["assets", ".css.d.ts"],
+  verbose: true,
+}
 
-module.exports = {
-  ...base,
-  name,
-  displayName: name,
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/__fixtures__/'],
-};
+export default jestConfig

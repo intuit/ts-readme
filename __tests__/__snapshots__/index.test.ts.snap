@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`it should generate some simple types 1`] = `
-Array [
+[
   "### \`bar\` (variable)
 
 ",

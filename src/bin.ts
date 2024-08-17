@@ -1,5 +1,5 @@
 import { app, Command } from 'command-line-application';
-import generate, {createMatcher} from '.';
+import generate, { createMatcher } from './index.js';
 
 const tsReadme: Command = {
   name: 'ts-readme',
@@ -7,12 +7,12 @@ const tsReadme: Command = {
   examples: [
     {
       example: 'ts-readme',
-      desc: 'Generate docs for everything in "src/"'
+      desc: 'Generate docs for everything in "src/"',
     },
     {
       example: 'ts-readme "components/**/*.(ts|tsx)"',
-      desc: 'Target specific files'
-    }
+      desc: 'Target specific files',
+    },
   ],
   options: [
     {
@@ -20,19 +20,20 @@ const tsReadme: Command = {
       type: String,
       defaultOption: true,
       multiple: true,
-      description: 'The files to generate docs for'
+      description: 'The files to generate docs for',
     },
     {
       name: 'header-depth',
       type: Number,
-      description: 'How deep the markdown headers should be'
+      description: 'How deep the markdown headers should be',
     },
     {
       name: 'matcher',
       type: String,
-      description: 'A string for creating and matching the markdown section to insert docs into'
-    }
-  ]
+      description:
+        'A string for creating and matching the markdown section to insert docs into',
+    },
+  ],
 };
 
 const args = app(tsReadme);
